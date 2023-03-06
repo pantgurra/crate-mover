@@ -16,6 +16,6 @@ const Output = styled.div`
       color: red;
     }
   }
-`
+`;
 
-export default Output
+export default Output;
