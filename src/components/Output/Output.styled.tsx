@@ -1,6 +1,7 @@
 import styled from "styled-components";
 
-const Output = styled.div`
+const Output = styled.ul`
+  list-style-type: none;
   background-color: var(--colors-black);
   flex: 0.5;
   border: none;
@@ -11,7 +12,7 @@ const Output = styled.div`
   white-space: pre-wrap;
   font-family: monospace;
   overflow-y: scroll;
-  span {
+  li {
     &.error {
       color: red;
     }

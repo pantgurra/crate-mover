@@ -4,7 +4,7 @@ import Container from "./components/Container";
 import Controller from "./components/Controller/Controller.styled";
 import Crates from "./components/Crates";
 import InputForm from "./components/InputForm";
-import Output from "./components/Output";
+import Output, { OutputInterface } from "./components/Output";
 import ToggleSwitch from "./components/ToggleSwitch";
 import Visualizer from "./components/Visualizer";
 
@@ -14,7 +14,7 @@ const App = () => {
   const [craneInstructions, setCraneInstructions] = useState<number[][]>();
   const [isCraneMover9001, setIsCraneMover9001] = useState(false);
   const [disabledInstructions, setDisabledInstructions] = useState(true);
-  const [output, setOutput] = useState<[string, string][]>([]);
+  const [output, setOutput] = useState<OutputInterface[]>([]);
   const handleCraneModelChange = () => {
     !!originalInput && loadInput(originalInput);
     setIsCraneMover9001(!isCraneMover9001);
@@ -22,16 +22,26 @@ const App = () => {
 
   const loadInput = (input: string) => {
     try {
-      // Split input in crates and instructions
+      /**
+       * Split input in crates and instructions
+       */
+
       const [stackString, instructionString] = input.split(/\n\n/);
 
-      // Split characters into array and only keep crate identifiers which are positioned at position in a pattern of four
+      /**
+       * Split characters into array and only keep crate identifiers
+       * which are positioned at position in a pattern of four
+       */
+
       const stackArrays = stackString
         .split(/\n/)
         .slice(0, -1)
         .map((row) => [...row].filter((_, index) => index % 4 === 1));
 
-      // Create an array with to display each stack with crates from top to bottom using a nested reduce to keep it functional
+      /**
+       * Create an array to display each stack with crates from top
+       * to bottom using a nested reduce to keep it functional
+       */
       const stacks: string[] = stackArrays.reduce(
         (arr: string[], row) =>
           row.reduce(
@@ -45,7 +55,10 @@ const App = () => {
       );
 
       const parseInstruction = (instruction: String): number[] => {
-        // Split instruction string and filter number values (the actual instructions)
+        /**
+         * Split instruction string and filter number values
+         * (the actual instructions)
+         */
         const [amount, from, to] = instruction
           .split(" ")
           .filter((el) => !isNaN(Number(el)))
@@ -59,7 +72,7 @@ const App = () => {
     } catch (error) {
       setOutput([
         ...output,
-        ["error", "Could not load input, verify your data"],
+        { type: "error", message: "Could not load input, verify your data" },
       ]);
     }
   };
@@ -72,9 +85,17 @@ const App = () => {
         from: number,
         to: number
       ) => {
+        /**
+         * Find crates that will be moved, reverse if CraneMover 9000
+         * since that lift one by one
+         */
         const cratesToMove = isCraneMover9001
           ? arr[from - 1].slice(0, amount)
           : [...arr[from - 1].slice(0, amount)].reverse().join("");
+
+        /**
+         * Return stacks with ordered crates
+         */
         return arr.map((stack, i) =>
           i === from - 1
             ? stack.slice(amount)
@@ -88,23 +109,27 @@ const App = () => {
         (arr, [amount, from, to]) => moveCrates(arr, amount, from, to),
         stacksOfCrates
       );
+
       if (!!orderedStacks) {
         setStacksOfCrates(orderedStacks);
         setOutput([
           ...output,
-          [
-            "success",
-            `Your puzzle answer is ${orderedStacks
+          {
+            type: "success",
+            message: `Your puzzle answer is ${orderedStacks
               .map((stack) => stack[0])
               .join("")}`,
-          ],
+          },
         ]);
         setDisabledInstructions(true);
       }
     } catch (error) {
       setOutput([
         ...output,
-        ["error", "Could not execute crane instructions, verify your data"],
+        {
+          type: "error",
+          message: "Could not execute crane instructions, verify your data",
+        },
       ]);
     }
   };
@@ -135,11 +160,10 @@ const App = () => {
           Execute Instructions
         </Button>
         <Output>
-          {output.map((line, i) => (
-            <span key={i} className={line[0]}>
-              [{line[0]}] {line[1]}
-              <br />
-            </span>
+          {output.map(({ type, message }, i) => (
+            <li key={i} className={type}>
+              [{type}] {message}
+            </li>
           ))}
         </Output>
       </Controller>
